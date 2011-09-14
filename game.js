@@ -3,8 +3,8 @@ var BEE_HOMING_SPEED_MAX = 7;
 var SIZE_OF_PLANT = 20;
 var SIZE_OF_BEES = 32;
 
-var WINDOW_WIDTH = 800;
-var WINDOW_HEIGHT = 600;
+var WINDOW_WIDTH = window.innerWidth;
+var WINDOW_HEIGHT = window.innerHeight;
 
 // define the cursor component for bees to home on
 Crafty.c("Cursor", {
