@@ -3,20 +3,16 @@ var BEE_HOMING_SPEED_MAX = 7;
 var SIZE_OF_PLANT = 20;
 var SIZE_OF_BEES = 32;
 
-var WINDOW_WIDTH = window.innerWidth;
-var WINDOW_HEIGHT = window.innerHeight;
+var WIDTH_OFFSET = ((window.innerWidth % SIZE_OF_PLANT) == 0? 20 : window.innerWidth % SIZE_OF_PLANT) / 2;
+
+var WINDOW_WIDTH = window.innerWidth - WIDTH_OFFSET * 2;
+var WINDOW_HEIGHT = window.innerHeight - window.innerHeight % SIZE_OF_PLANT;
+
+Crafty.c("Collided", {});
 
 // define the cursor component for bees to home on
 Crafty.c("Cursor", {
   init: function() {
-    // initialize the value used for homing the bees
-    this.attr({
-      moveTo: null,
-      w: SIZE_OF_BEES,
-      h: SIZE_OF_BEES,
-      inCollision: []
-    });
-
     // things to do every time step
     this.bind("EnterFrame", function(e) {
       // home the bees every time step
@@ -34,10 +30,6 @@ Crafty.c("Cursor", {
     });
 
     // setup collision detection
-    this.attr({
-      w: SIZE_OF_BEES,
-      h: SIZE_OF_BEES
-    });
     this.addComponent("Collision").collision();
     this.onHit("Plant", function(e) {
       // collided with a plant
@@ -46,7 +38,7 @@ Crafty.c("Cursor", {
       var plants = Crafty("Plant");
       var i;
       for (i = 0; i < plants.length; ++i) {
-        Crafty(plants[i]).color("#0F0");
+        Crafty(plants[i]).removeComponent("Collided");
       }
 
       // highlight colliding plants
@@ -54,7 +46,7 @@ Crafty.c("Cursor", {
         var x;
         for (x in e) {
           if (e[x].type == "SAT") {
-            e[x].obj.color("#FFF");
+            e[x].obj.addComponent("Collided");
           }
         }
       }
@@ -63,20 +55,22 @@ Crafty.c("Cursor", {
       var plants = Crafty("Plant");
       var i;
       for (i = 0; i < plants.length; ++i) {
-        Crafty(plants[i]).color("#0F0");
+        Crafty(plants[i]).removeComponent("Collided");
       }
     });
-  }
+  },
+  h: SIZE_OF_BEES,
+  inCollision: [],
+  moveTo: null,
+  w: SIZE_OF_BEES
 });
 
 Crafty.c("Plant", {
   init: function() {
-    this.attr({
-      w: SIZE_OF_PLANT,
-      h: SIZE_OF_PLANT
-    });
     this.addComponent("Collision").collision();
-  }
+  },
+  h: SIZE_OF_PLANT,
+  w: SIZE_OF_PLANT
 });
 
 
@@ -97,12 +91,11 @@ Crafty.scene("main", function () {
   // generate world
 
   // generate the bees
-  var player = Crafty.e("2D, DOM, Color, Cursor")
+  var player = Crafty.e("2D, DOM, Cursor")
       .attr({
         x: (WINDOW_WIDTH - SIZE_OF_BEES)/2,
         y: (WINDOW_HEIGHT - SIZE_OF_BEES)/2
-      })
-      .color("#F00");
+      });
 
   // homing bees event handling
   Crafty.addEvent(this, Crafty.stage.elem, "mousedown", function(e) {
@@ -111,7 +104,7 @@ Crafty.scene("main", function () {
 
     // record the mouse value to home the bees
     var homing = function(e) {
-      player.attr("moveTo", {x: e.clientX, y: e.clientY});
+      player.attr("moveTo", {x: e.clientX - WIDTH_OFFSET, y: e.clientY});
     };
 
     // home the bees
@@ -130,12 +123,12 @@ Crafty.scene("main", function () {
   // generate the plants
   var i;
   for (i = 0; i < 30; ++i) {
-    Crafty.e("2D, DOM, Color, Plant")
+    var plant = Crafty.e("2D, DOM, Plant, Text")
       .attr({
-        x: Crafty.randRange(0, WINDOW_WIDTH - SIZE_OF_PLANT),
-        y: Crafty.randRange(0, WINDOW_HEIGHT - SIZE_OF_PLANT)
-      })
-      .color("#0F0");
+        x: Crafty.randRange(0, WINDOW_WIDTH / SIZE_OF_PLANT - 1) * SIZE_OF_PLANT,
+        y: Crafty.randRange(0, WINDOW_HEIGHT / SIZE_OF_PLANT - 1) * SIZE_OF_PLANT
+      });
+    plant.text(plant[0]);
   }
 });
 
