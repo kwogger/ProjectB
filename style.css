@@ -3,18 +3,20 @@ body {
 }
 
 #cr-stage {
+  background: url('img/Grass.png');
   margin: 0 auto;
 }
 
 .Plant {
-  background: rgba(0, 255, 0, 0.5);
+  background: url('img/Flower1.png') no-repeat center center;
+  color: #F00;
   text-align: center;
 }
 
 .Plant.Collided {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3) url('img/Flower1.png') no-repeat center center;
 }
 
 .Cursor {
-  background: rgba(255, 0, 0, 0.5);
+  background: rgba(255, 255, 0, 0.1) url('img/Bees.gif') no-repeat center center;
 }

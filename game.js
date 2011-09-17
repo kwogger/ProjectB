@@ -1,3 +1,4 @@
+// CONSTANTS
 // The speed in which the bees home in on the mouse cursor
 var BEE_HOMING_SPEED_MAX = 7;
 var SIZE_OF_PLANT = 20;
@@ -8,7 +9,20 @@ var WIDTH_OFFSET = ((window.innerWidth % SIZE_OF_PLANT) == 0? 20 : window.innerW
 var WINDOW_WIDTH = window.innerWidth - WIDTH_OFFSET * 2;
 var WINDOW_HEIGHT = window.innerHeight - window.innerHeight % SIZE_OF_PLANT;
 
-Crafty.c("Collided", {});
+var GRID_RANGE_X = WINDOW_WIDTH / SIZE_OF_PLANT - 1;
+var GRID_RANGE_Y = WINDOW_HEIGHT / SIZE_OF_PLANT - 1;
+
+// GLOBAL VARIABLES
+var plant_grid = new Array(GRID_RANGE_X);
+{
+  var x, y;
+  for (x = 0; x <= GRID_RANGE_X; ++x) {
+    plant_grid[x] = new Array(GRID_RANGE_Y);
+    for (y = 0; y <= GRID_RANGE_Y; ++y) {
+      plant_grid[x][y] = false;
+    }
+  }
+}
 
 // define the cursor component for bees to home on
 Crafty.c("Cursor", {
@@ -70,7 +84,20 @@ Crafty.c("Plant", {
     this.addComponent("Collision").collision();
   },
   h: SIZE_OF_PLANT,
-  w: SIZE_OF_PLANT
+  w: SIZE_OF_PLANT,
+  plant_x: -1,
+  plant_y: -1,
+  plant_pos: function(new_plant_x, new_plant_y) {
+    if (this.plant_x != -1 && this.plant_y != -1) {
+      plant_grid[this.plant_x][this.plant_y] = false;
+    }
+    this.plant_x = new_plant_x;
+    this.plant_y = new_plant_y;
+    plant_grid[this.plant_x][this.plant_y] = this[0];
+    this.x = new_plant_x * SIZE_OF_PLANT;
+    this.y = new_plant_y * SIZE_OF_PLANT;
+    return this;
+  }
 });
 
 
@@ -81,7 +108,6 @@ Crafty.scene("loading", function () {
     Crafty.scene("main"); //when everything is loaded, run the main scene
   });
   //black background with some loading text
-  Crafty.background("#000");
   Crafty.e("2D, DOM, Text").attr({ w: 100, h: 20, x: 150, y: 120 })
       .text("Loading")
       .css({ "text-align": "center" });
@@ -120,14 +146,13 @@ Crafty.scene("main", function () {
     });
   });
 
-  // generate the plants
+  // generate the initial plants
   var i;
-  for (i = 0; i < 30; ++i) {
-    var plant = Crafty.e("2D, DOM, Plant, Text")
-      .attr({
-        x: Crafty.randRange(0, WINDOW_WIDTH / SIZE_OF_PLANT - 1) * SIZE_OF_PLANT,
-        y: Crafty.randRange(0, WINDOW_HEIGHT / SIZE_OF_PLANT - 1) * SIZE_OF_PLANT
-      });
+
+  for (i = 0; i < 5; ++i) {
+    var plant = Crafty
+      .e("2D, DOM, Plant, Text")
+      .plant_pos(Crafty.randRange(0, GRID_RANGE_X), Crafty.randRange(0, GRID_RANGE_Y));
     plant.text(plant[0]);
   }
 });
