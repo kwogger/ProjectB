@@ -24,25 +24,41 @@ var plant_grid = new Array(GRID_RANGE_X);
   }
 }
 
-// define the cursor component for bees to home on
-Crafty.c("Cursor", {
-  init: function() {
-    // things to do every time step
+Crafty.c("Moving", {
+  init:
+  function() {
     this.bind("EnterFrame", function(e) {
-      // home the bees every time step
-      if (this.moveTo != null) {
-        var xDiff = this.moveTo.x - this.x - this.w/2;
-        var yDiff = this.moveTo.y - this.y - this.h/2;
+      if (this._destPos != null) {
+        var xDiff = this._destPos.x - this.x - this.w/2;
+        var yDiff = this._destPos.y - this.y - this.h/2;
         var dist = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
         if (dist > 0) {
-          xDiff = xDiff * Math.min(BEE_HOMING_SPEED_MAX, dist) / dist;
-          yDiff = yDiff * Math.min(BEE_HOMING_SPEED_MAX, dist) / dist;
+          xDiff = xDiff * Math.min(this._destPos.speed, dist) / dist;
+          yDiff = yDiff * Math.min(this._destPos.speed, dist) / dist;
           this.x += xDiff;
           this.y += yDiff;
         }
       }
     });
+  },
+  _destPos: null,
+  moveTo:
+  function(x, y, speed) {
+    this._destPos = {
+      x: x,
+      y: y,
+      speed: speed
+    };
+  },
+  moveStop:
+  function() {
+    this._destPos = null;
+  }
+});
 
+// define the cursor component for bees to home on
+Crafty.c("Cursor", {
+  init: function() {
     // setup collision detection
     this.addComponent("Collision").collision();
     this.onHit("Plant", function(e) {
@@ -75,8 +91,16 @@ Crafty.c("Cursor", {
   },
   h: SIZE_OF_BEES,
   inCollision: [],
-  moveTo: null,
   w: SIZE_OF_BEES
+});
+
+Crafty.c("Enemy", {
+  init: function() {
+    this.addComponent("2D, DOM");
+  },
+  enemy: function(hp) {
+    this._hp = hp;
+  }
 });
 
 Crafty.c("Plant", {
@@ -117,7 +141,7 @@ Crafty.scene("main", function () {
   // generate world
 
   // generate the bees
-  var player = Crafty.e("2D, DOM, Cursor")
+  var player = Crafty.e("2D, DOM, Cursor, Moving")
       .attr({
         x: (WINDOW_WIDTH - SIZE_OF_BEES)/2,
         y: (WINDOW_HEIGHT - SIZE_OF_BEES)/2
@@ -130,7 +154,7 @@ Crafty.scene("main", function () {
 
     // record the mouse value to home the bees
     var homing = function(e) {
-      player.attr("moveTo", {x: e.clientX - WIDTH_OFFSET, y: e.clientY});
+      player.moveTo(e.clientX - WIDTH_OFFSET, e.clientY, BEE_HOMING_SPEED_MAX);
     };
 
     // home the bees
@@ -142,7 +166,7 @@ Crafty.scene("main", function () {
     // stop homing on mouse release
     Crafty.addEvent(this, Crafty.stage.elem, "mouseup", function() {
       Crafty.removeEvent(this, Crafty.stage.elem, "mousemove", homing);
-      player.attr("moveTo", null);
+      player.moveStop();
     });
   });
 
